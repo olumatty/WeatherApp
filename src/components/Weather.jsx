@@ -6,7 +6,7 @@ import Humidty from "../../public/humidity.png";
 
 const Weather = () => {
   const [weatherData, setWeatherData] = useState(null);
-  const [city, setCity] = useState("Lagos"); 
+  const [city, setCity] = useState("Lagos");
   const apiKey = "52c645a604bba508631dfa1baf3746aa";
 
   const search = async (searchCity) => {
@@ -30,67 +30,65 @@ const Weather = () => {
       });
     } catch (error) {
       console.error(error);
-      setWeatherData(null); d
+      setWeatherData(null);
       alert("City not found. Please try another city.");
     }
   };
 
   useEffect(() => {
-    
     search(city);
   }, []);
 
   return (
-    <div className="flex flex-col md:place-self-center items-center justify-center px-10 md:px-60 py-[60px]">
-      <h1 className="font-bold text-3xl mb-3">Real-time WeatherApp</h1>
-      <div className="border w-[100%] flex flex-col justify-center rounded-lg bg md:w-[50%]">
-        <div className="flex flex-row justify-center items-center gap-3 p-8">
-          <input
-            type="text"
-            placeholder="Enter city name"
-            className="outline-none border h-[36px] w-[240px] p-6 rounded-full"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          />
-          <div
-            className="bg-[#ebfffc] w-[40px] h-[40px] rounded-full cursor-pointer"
-            onClick={() => search(city)}
-          >
-            <Image src={Search} height={20} alt="Search" className="mx-auto mt-3" />
+    <div className="flex flex-col items-center justify-center px-4 md:px-20 lg:px-60 py-6 md:py-12">
+    <h1 className="font-bold text-2xl md:text-3xl mb-3 text-center">Real-time WeatherApp</h1>
+    <div className="border w-full max-w-md flex flex-col justify-center rounded-lg bg p-4 md:p-6">
+      <div className="flex flex-row justify-center items-center gap-2 md:gap-3 mb-6">
+        <input
+          type="text"
+          placeholder="Enter city name"
+          className="outline-none border h-10 md:h-12 w-full max-w-xs p-3 rounded-full"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+        />
+        <div
+          className="bg-[#ebfffc] w-10 h-10 md:w-12 md:h-12 rounded-full cursor-pointer flex items-center justify-center"
+          onClick={() => search(city)}
+        >
+          <Image src={Search} alt="Search" className="h-4 w-4 md:h-5 md:w-5" />
+        </div>
+      </div>
+      {weatherData && (
+        <div className="font-semibold text-white text-center">
+          <h1 className="text-lg md:text-xl mb-3">
+            {weatherData.city}, {weatherData.country}
+          </h1>
+          <div className="flex flex-col md:flex-row justify-around items-center gap-3 text-center mb-4">
+            <div>
+              <Image src={weatherData.image} height={60} width={60} alt="Weather Icon" />
+              <p className="font-bold text-sm md:text-base">{weatherData.description}</p>
+            </div>
+            <div className="text-2xl md:text-3xl">{weatherData.temperature}°C</div>
+            <div className="text-sm md:text-base">
+              <p>Wind: {weatherData.windSpeed} kmph</p>
+              <p>Precip: {weatherData.precip} mm</p>
+              <p>Pressure: {weatherData.pressure} mb</p>
+            </div>
           </div>
         </div>
-        {weatherData && (
-          <div className="font-semibold text-white">
-            <h1 className="flex justify-center">
-              {weatherData.city}, {weatherData.country}
-            </h1>
-            <div className="flex justify-around items-center">
-              <div>
-                <Image src={weatherData.image} height={60} width={60} alt="Weather Icon" className="effect" />
-                <p className="font-bold">{weatherData.description}</p>
-              </div>
-              <div>
-                <p className="text-3xl">{weatherData.temperature}°C</p>
-              </div>
-              <div>
-                <p>Wind: {weatherData.windSpeed} kmph</p>
-                <p>Precip: {weatherData.precip} mm</p>
-                <p>Pressure: {weatherData.pressure} mb</p>
-              </div>
-            </div>
+      )}
+      {weatherData && (
+        <div className="flex justify-center items-center mt-4 text-white font-semibold gap-2">
+          <Image src={Humidty} height={24} width={24} alt="Humidity Icon" />
+          <div className="text-center">
+            <p className="text-lg md:text-xl">{weatherData.humidity}%</p>
+            <p className="text-sm">Humidity</p>
           </div>
-        )}
-        {weatherData && (
-          <div className="flex justify-center mt-6 mb-6 text-white font-semibold gap-2">
-            <Image src={Humidty} height={30} width={30} alt="Humidity Icon" />
-            <div>
-              <p className="text-xl">{weatherData.humidity}%</p>
-              <p>Humidity</p>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
+  </div>
+  
   );
 };
 
