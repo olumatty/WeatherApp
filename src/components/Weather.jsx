@@ -10,8 +10,8 @@ const Weather = () => {
   const [lat, setLat] = useState(null);
   const [long, setLong] = useState(null);
   const [randomCitiesWeather, setRandomCitiesWeather] = useState([]);
-  const randomCityNames = ['Lagos', 'London', 'Abuja', 'Paris', 'Accra'];
-  const apiKey = "720a23442adb1648db48b5846b943582";
+  const randomCityNames = ["Lagos", "Abuja", "Paris", "Accra"];
+  const apiKey = "693e82f9541721a7e5245696a33eeb29";
 
   const search = async (searchCity, longitude, latitude) => {
     try {
@@ -48,7 +48,7 @@ const Weather = () => {
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      function (position) {
         setLat(position.coords.latitude);
         setLong(position.coords.longitude);
       },
@@ -74,6 +74,11 @@ const Weather = () => {
       const formattedData = data.map((cityData) => ({
         city: cityData.location.name,
         temperature: cityData.current.temperature,
+        windSpeed: cityData.current.wind_speed,
+        country: cityData.location.country,
+        precip: cityData.current.precip,
+        pressure: cityData.current.pressure,
+        humidity: cityData.current.humidity,
       }));
 
       setRandomCitiesWeather(formattedData);
@@ -104,7 +109,11 @@ const Weather = () => {
             className="bg-white w-10 h-10 md:w-12 md:h-12 rounded-full cursor-pointer flex items-center justify-center"
             onClick={() => search(city)}
           >
-            <Image src={Search} alt="Search" className="h-4 w-4 md:h-5 md:w-5" />
+            <Image
+              src={Search}
+              alt="Search"
+              className="h-4 w-4 md:h-5 md:w-5"
+            />
           </div>
         </div>
         {weatherData && (
@@ -143,11 +152,25 @@ const Weather = () => {
             </div>
           </div>
         )}
-        <div className="mt-6 text-white gap-4 grid-cols-5 grid mx-auto">
+        <div className="mt-6 grid grid-cols-2 justify-center text-white gap-2  ">
           {randomCitiesWeather.map((random, index) => (
-            <div key={index} className="justify-center mb-2 font-semibold">
-              <h3>{random.city}</h3>
-              <p>{random.temperature}°C</p>
+            <div
+              key={index}
+              className="border rounded flex flex-col justify-around items-center p-2 font-semibold">
+              
+              <div>
+                <h3>{random.city}, {random.country}</h3>
+                <p className="text-2xl text-center mt-2">{random.temperature}°C</p>
+              </div>
+
+                <div className="text-sm mt-2 text-center">
+                <p>Humidity: {random.humidity}%</p>
+                  <p> Wind: {random.windSpeed}kmph </p>
+                  <p> Pressure: {random.pressure}mm </p>
+                  <p> Precip : {random.precip}mb </p>
+                
+                </div>
+    
             </div>
           ))}
         </div>
