@@ -6,16 +6,27 @@ import Humidty from "../../public/humidity.png";
 
 const Weather = () => {
   const [weatherData, setWeatherData] = useState(null);
-  const [city, setCity] = useState("Lagos");
-  const apiKey = "52c645a604bba508631dfa1baf3746aa";
+  const [city, setCity] = useState("Texas");
+  const [lat, setLat] = useState(null);
+  const [long, setLong] = useState(null);
+  const [randomCitiesWeather, setRandomCitiesWeather] = useState([]);
+  const randomCityNames = ['Lagos', 'London', 'Abuja', 'Paris', 'Accra'];
+  const apiKey = "720a23442adb1648db48b5846b943582";
 
-  const search = async (searchCity) => {
+  const search = async (searchCity, longitude, latitude) => {
     try {
-      const url = `http://api.weatherstack.com/current?access_key=${apiKey}&query=${searchCity}`;
+      let url;
+      if (latitude && longitude) {
+        url = `http://api.weatherstack.com/current?access_key=${apiKey}&query=${latitude},${longitude}`;
+      } else {
+        url = `http://api.weatherstack.com/current?access_key=${apiKey}&query=${searchCity}`;
+      }
+
       const response = await fetch(url);
       const data = await response.json();
+
       if (data.success === false) {
-        throw new Error("City not found");
+        throw new Error("Location not found");
       }
       setWeatherData({
         city: data.location.name,
@@ -31,64 +42,117 @@ const Weather = () => {
     } catch (error) {
       console.error(error);
       setWeatherData(null);
-      alert("City not found. Please try another city.");
+      alert("Location not found. Please try another city.");
     }
   };
 
   useEffect(() => {
-    search(city);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLat(position.coords.latitude);
+        setLong(position.coords.longitude);
+      },
+      (error) => console.error("Error getting geolocation:", error),
+      { enableHighAccuracy: true, maximumAge: 0 }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (lat && long) {
+      search("", lat, long);
+    }
+  }, [lat, long]);
+
+  const fetchRandomCitiesWeather = async () => {
+    try {
+      const citiesWeatherPromises = randomCityNames.map((city) => {
+        const url = `http://api.weatherstack.com/current?access_key=${apiKey}&query=${city}`;
+        return fetch(url).then((response) => response.json());
+      });
+
+      const data = await Promise.all(citiesWeatherPromises);
+      const formattedData = data.map((cityData) => ({
+        city: cityData.location.name,
+        temperature: cityData.current.temperature,
+      }));
+
+      setRandomCitiesWeather(formattedData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRandomCitiesWeather();
   }, []);
 
   return (
     <div className="flex flex-col items-center justify-center px-4 md:px-20 lg:px-60 py-6 md:py-12">
-    <h1 className="font-bold text-2xl md:text-3xl mb-3 text-center">Real-time WeatherApp</h1>
-    <div className="border w-full max-w-md flex flex-col justify-center rounded-lg bg p-4 md:p-6">
-      <div className="flex flex-row justify-center items-center gap-2 md:gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Enter city name"
-          className="outline-none border h-10 md:h-12 w-full max-w-xs p-3 rounded-full"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-        />
-        <div
-          className="bg-[#ebfffc] w-10 h-10 md:w-12 md:h-12 rounded-full cursor-pointer flex items-center justify-center"
-          onClick={() => search(city)}
-        >
-          <Image src={Search} alt="Search" className="h-4 w-4 md:h-5 md:w-5" />
+      <h1 className="font-bold text-2xl md:text-3xl mb-3 text-center">
+        Real-time WeatherApp
+      </h1>
+      <div className="border w-full max-w-md flex flex-col justify-center rounded-lg bg-blue-500 p-4 md:p-6">
+        <div className="flex flex-row justify-center items-center gap-2 md:gap-3 mb-6">
+          <input
+            type="text"
+            placeholder="Enter city name"
+            className="outline-none border h-10 md:h-12 w-full max-w-xs p-3 rounded-full"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+          />
+          <div
+            className="bg-white w-10 h-10 md:w-12 md:h-12 rounded-full cursor-pointer flex items-center justify-center"
+            onClick={() => search(city)}
+          >
+            <Image src={Search} alt="Search" className="h-4 w-4 md:h-5 md:w-5" />
+          </div>
+        </div>
+        {weatherData && (
+          <div className="font-semibold text-white text-center">
+            <h1 className="text-lg md:text-xl mb-3">
+              {weatherData.city}, {weatherData.country}
+            </h1>
+            <div className="flex flex-col md:flex-row md:justify-around items-center gap-3 text-center mb-4">
+              <div className="flex flex-col space-y-2 place-items-center justify-center">
+                <Image
+                  src={weatherData.image}
+                  height={60}
+                  width={60}
+                  alt="Weather Icon"
+                  className="justify-center"
+                />
+                <p className="font-bold text-sm md:text-base">
+                  {weatherData.description}
+                </p>
+              </div>
+              <div className="text-3xl">{weatherData.temperature}°C</div>
+              <div className="text-sm md:text-base">
+                <p>Wind: {weatherData.windSpeed} kmph</p>
+                <p>Precip: {weatherData.precip} mm</p>
+                <p>Pressure: {weatherData.pressure} mb</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {weatherData && (
+          <div className="flex justify-center items-center mt-4 text-white font-semibold gap-2">
+            <Image src={Humidty} height={24} width={24} alt="Humidity Icon" />
+            <div className="text-center">
+              <p className="text-lg md:text-xl">{weatherData.humidity}%</p>
+              <p className="text-sm">Humidity</p>
+            </div>
+          </div>
+        )}
+        <div className="mt-6 text-white gap-4 grid-cols-5 grid mx-auto">
+          {randomCitiesWeather.map((random, index) => (
+            <div key={index} className="justify-center mb-2 font-semibold">
+              <h3>{random.city}</h3>
+              <p>{random.temperature}°C</p>
+            </div>
+          ))}
         </div>
       </div>
-      {weatherData && (
-        <div className="font-semibold text-white text-center">
-          <h1 className="text-lg md:text-xl mb-3">
-            {weatherData.city}, {weatherData.country}
-          </h1>
-          <div className="flex flex-col md:flex-row justify-around items-center gap-3 text-center mb-4">
-            <div>
-              <Image src={weatherData.image} height={60} width={60} alt="Weather Icon" />
-              <p className="font-bold text-sm md:text-base">{weatherData.description}</p>
-            </div>
-            <div className="text-2xl md:text-3xl">{weatherData.temperature}°C</div>
-            <div className="text-sm md:text-base">
-              <p>Wind: {weatherData.windSpeed} kmph</p>
-              <p>Precip: {weatherData.precip} mm</p>
-              <p>Pressure: {weatherData.pressure} mb</p>
-            </div>
-          </div>
-        </div>
-      )}
-      {weatherData && (
-        <div className="flex justify-center items-center mt-4 text-white font-semibold gap-2">
-          <Image src={Humidty} height={24} width={24} alt="Humidity Icon" />
-          <div className="text-center">
-            <p className="text-lg md:text-xl">{weatherData.humidity}%</p>
-            <p className="text-sm">Humidity</p>
-          </div>
-        </div>
-      )}
     </div>
-  </div>
-  
   );
 };
 
